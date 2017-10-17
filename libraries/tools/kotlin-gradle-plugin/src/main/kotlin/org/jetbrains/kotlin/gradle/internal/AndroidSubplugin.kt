@@ -27,7 +27,6 @@ import org.gradle.api.Project
 import org.gradle.api.UnknownDomainObjectException
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.compile.AbstractCompile
-import com.intellij.openapi.util.text.StringUtil.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.plugin.android.AndroidGradleWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -100,7 +99,7 @@ class AndroidSubplugin : KotlinGradleSubplugin<KotlinCompile> {
 
         if (androidExtensionsExtension.isExperimental) {
             return applyExperimental(kotlinCompile, androidExtension, androidExtensionsExtension,
-                    project, variantData, androidProjectHandler)
+                                     project, variantData, androidProjectHandler)
         }
 
         val sourceSets = androidExtension.sourceSets
@@ -118,7 +117,7 @@ class AndroidSubplugin : KotlinGradleSubplugin<KotlinCompile> {
 
         fun addVariant(sourceSet: AndroidSourceSet) {
             pluginOptions += SubpluginOption("variant", sourceSet.name + ';' +
-                    sourceSet.res.srcDirs.joinToString(";") { it.absolutePath })
+                                                        sourceSet.res.srcDirs.joinToString(";") { it.absolutePath })
             kotlinCompile.source(project.files(getLayoutDirectories(sourceSet.res.srcDirs)))
         }
 
@@ -155,7 +154,7 @@ class AndroidSubplugin : KotlinGradleSubplugin<KotlinCompile> {
 
         pluginOptions += SubpluginOption("experimental", "true")
         pluginOptions += SubpluginOption("defaultCacheImplementation",
-                androidExtensionsExtension.defaultCacheImplementation.optionName)
+                                         androidExtensionsExtension.defaultCacheImplementation.optionName)
 
         val mainSourceSet = androidExtension.sourceSets.getByName("main")
         pluginOptions += SubpluginOption("package", getApplicationPackage(project, mainSourceSet))
@@ -209,7 +208,7 @@ class AndroidSubplugin : KotlinGradleSubplugin<KotlinCompile> {
         is TestVariant -> getVariantComponentNames(flavorData.testedVariant)
         is BaseVariant -> VariantComponentNames(flavorData.name, flavorData.flavorName, flavorData.buildType.name)
         is BaseVariantData<*> -> VariantComponentNames(flavorData.name, flavorData.variantConfiguration.flavorName,
-                flavorData.variantConfiguration.buildType.name)
+                                                       flavorData.variantConfiguration.buildType.name)
         else -> null
     }
 
@@ -231,7 +230,7 @@ class AndroidSubplugin : KotlinGradleSubplugin<KotlinCompile> {
 
         if (applicationPackage == null) {
             project.logger.warn("Application package name is not present in the manifest file " +
-                    "(${manifestFile.absolutePath})")
+                                "(${manifestFile.absolutePath})")
 
             return ""
         } else {
