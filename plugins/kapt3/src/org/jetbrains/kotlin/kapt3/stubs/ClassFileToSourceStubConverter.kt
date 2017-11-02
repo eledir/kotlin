@@ -18,7 +18,6 @@ package org.jetbrains.kotlin.kapt3.stubs
 
 import com.sun.tools.javac.code.Flags
 import com.sun.tools.javac.code.TypeTag
-import com.sun.tools.javac.file.JavacFileManager
 import com.sun.tools.javac.parser.Tokens
 import com.sun.tools.javac.tree.JCTree
 import com.sun.tools.javac.tree.JCTree.*
