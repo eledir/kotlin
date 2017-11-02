@@ -46,7 +46,6 @@ import org.jetbrains.org.objectweb.asm.Opcodes
 import org.jetbrains.org.objectweb.asm.Type
 import org.jetbrains.org.objectweb.asm.tree.*
 import javax.lang.model.element.ElementKind
-import javax.tools.JavaFileManager
 import com.sun.tools.javac.util.List as JavacList
 
 class ClassFileToSourceStubConverter(
@@ -87,8 +86,6 @@ class ClassFileToSourceStubConverter(
 
     val bindings: Map<String, KaptJavaFileObject>
         get() = _bindings
-
-    private val fileManager = kaptContext.context.get(JavaFileManager::class.java) as JavacFileManager
 
     val treeMaker = TreeMaker.instance(kaptContext.context) as KaptTreeMaker
 
