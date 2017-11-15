@@ -186,8 +186,9 @@ internal fun InstructionAdapter.castIfNeeded(targetType: Type) {
 
 internal class ListSetParcelSerializer(
         asmType: Type,
-        elementSerializer: ParcelSerializer
-) : AbstractCollectionParcelSerializer(asmType, elementSerializer) {
+        elementSerializer: ParcelSerializer,
+        variableFactory: LocalVariableFactory
+) : AbstractCollectionParcelSerializer(asmType, elementSerializer, variableFactory) {
     override fun getSize(v: InstructionAdapter) {
         v.invokeinterface("java/util/Collection", "size", "()I")
     }
@@ -216,8 +217,9 @@ internal class ListSetParcelSerializer(
 internal class MapParcelSerializer(
         asmType: Type,
         private val keySerializer: ParcelSerializer,
-        elementSerializer: ParcelSerializer
-) : AbstractCollectionParcelSerializer(asmType, elementSerializer) {
+        elementSerializer: ParcelSerializer,
+        variableFactory: LocalVariableFactory
+) : AbstractCollectionParcelSerializer(asmType, elementSerializer, variableFactory) {
     override fun getSize(v: InstructionAdapter) {
         v.invokeinterface("java/util/Map", "size", "()I")
     }
@@ -260,7 +262,8 @@ internal class MapParcelSerializer(
 
 abstract internal class AbstractCollectionParcelSerializer(
         final override val asmType: Type,
-        protected val elementSerializer: ParcelSerializer
+        protected val elementSerializer: ParcelSerializer,
+        private val variableFactory: LocalVariableFactory
 ) : ParcelSerializer {
     protected val collectionType: Type = Type.getObjectType(when (asmType.internalName) {
         "java/util/List" -> "java/util/ArrayList"
@@ -331,27 +334,27 @@ abstract internal class AbstractCollectionParcelSerializer(
     }
 
     override fun readValue(v: InstructionAdapter) {
+        variableFactory.withLocalVariable(Type.INT_TYPE) { sizeVarIndex ->
+            v.invokevirtual(PARCEL_TYPE.internalName, "readInt", "()I", false) // -> size
+            v.store(sizeVarIndex, Type.INT_TYPE)
+
+            v.anew(collectionType) // -> list
+            v.dup() // -> list, list
+
+            if (hasConstructorWithCapacity) {
+                v.load(sizeVarIndex, Type.INT_TYPE)
+                v.invokespecial(collectionType.internalName, "<init>", "(I)V", false) // -> list
+            } else {
+                v.invokespecial(collectionType.internalName, "<init>", "()V", false) // -> list
+            }
+
+            v.load(sizeVarIndex, Type.INT_TYPE) // -> list, size
+        }
+
         val nextLoopIteration = Label()
         val loopIsOver = Label()
 
-        // Read list size
-        v.invokevirtual(PARCEL_TYPE.internalName, "readInt", "()I", false) // -> size
-        v.dup() // -> size, size
-
-        v.anew(collectionType) // -> size, size, list
-        v.dupX1() // -> size, list, size, list
-        v.swap() // -> size, list, list, size
-
-        if (hasConstructorWithCapacity) {
-            v.invokespecial(collectionType.internalName, "<init>", "(I)V", false) // -> size, list
-        }
-        else {
-            v.pop() // -> size, list, list
-            v.invokespecial(collectionType.internalName, "<init>", "()V", false) // -> size, list
-        }
-
         v.visitLabel(nextLoopIteration)
-        v.swap() // -> list, size
         v.dupX1() // -> size, list, size
         v.ifeq(loopIsOver) // -> size, list
         v.dup() // -> size, list, list
@@ -362,16 +365,19 @@ abstract internal class AbstractCollectionParcelSerializer(
         v.aconst(-1) // -> list, size, (-1)
         v.add(Type.INT_TYPE) // -> list, (size - 1)
 
-        v.swap() // -> size, list
         v.goTo(nextLoopIteration)
 
         v.visitLabel(loopIsOver)
-        v.swap()
+        v.swap() // -> list, size
         v.pop()
     }
 }
 
-internal class SparseArrayParcelSerializer(override val asmType: Type, private val valueSerializer: ParcelSerializer) : ParcelSerializer {
+internal class SparseArrayParcelSerializer(
+        override val asmType: Type,
+        private val valueSerializer: ParcelSerializer,
+        private val variableFactory: LocalVariableFactory
+) : ParcelSerializer {
     private val valueType = (valueSerializer as? PrimitiveTypeParcelSerializer)?.asmType ?: Type.getObjectType("java/lang/Object")
 
     override fun writeValue(v: InstructionAdapter) {
@@ -421,12 +427,17 @@ internal class SparseArrayParcelSerializer(override val asmType: Type, private v
     }
 
     override fun readValue(v: InstructionAdapter) {
-        v.invokevirtual(PARCEL_TYPE.internalName, "readInt", "()I", false) // -> size
-        v.dup() // -> size, size
-        v.anew(asmType) // -> size, size, arr
-        v.dupX2() // -> arr, size, size, arr
-        v.swap() // -> arr, size, arr, size
-        v.invokespecial(asmType.internalName, "<init>", "(I)V", false) // -> arr, size
+        variableFactory.withLocalVariable(Type.INT_TYPE) { sizeVarIndex ->
+            v.invokevirtual(PARCEL_TYPE.internalName, "readInt", "()I", false) // -> size
+            v.store(sizeVarIndex, Type.INT_TYPE) // -> (empty)
+
+            v.anew(asmType) // -> arr
+            v.dup() // -> arr, arr
+            v.load(sizeVarIndex, Type.INT_TYPE) // -> arr, arr, size
+            v.invokespecial(asmType.internalName, "<init>", "(I)V", false) // -> arr
+
+            v.load(sizeVarIndex, Type.INT_TYPE) // -> arr, size
+        }
 
         val nextLoopIteration = Label()
         val loopIsOver = Label()

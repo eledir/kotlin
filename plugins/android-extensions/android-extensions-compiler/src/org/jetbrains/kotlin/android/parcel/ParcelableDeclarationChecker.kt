@@ -17,6 +17,7 @@
 package org.jetbrains.kotlin.android.parcel
 
 import kotlinx.android.parcel.IgnoredOnParcel
+import org.jetbrains.kotlin.android.parcel.serializers.LocalVariableFactory
 import org.jetbrains.kotlin.android.parcel.serializers.ParcelSerializer
 import org.jetbrains.kotlin.android.parcel.serializers.isParcelable
 import org.jetbrains.kotlin.android.synthetic.diagnostic.DefaultErrorMessagesAndroid
@@ -214,7 +215,11 @@ class ParcelableDeclarationChecker : SimpleDeclarationChecker {
 
             try {
                 val parcelers = getTypeParcelers(descriptor.annotations) + getTypeParcelers(containerClass.annotations)
-                val context = ParcelSerializer.ParcelSerializerContext(typeMapper, typeMapper.mapType(containerClass.defaultType), parcelers)
+                val context = ParcelSerializer.ParcelSerializerContext(
+                        typeMapper,
+                        typeMapper.mapType(containerClass.defaultType),
+                        parcelers,
+                        LocalVariableFactory.STUB)
                 ParcelSerializer.get(type, asmType, context, strict = true)
             }
             catch (e: IllegalArgumentException) {

@@ -17,16 +17,17 @@ public final class User$Creator : java/lang/Object, android/os/Parcelable$Creato
           INVOKEVIRTUAL (android/os/Parcel, createBinderArrayList, ()Ljava/util/ArrayList;)
           CHECKCAST
           ALOAD (1)
-          INVOKEVIRTUAL (android/os/Parcel, readInt, ()I)
-          DUP
-          NEW
-          DUP_X1
-          SWAP
-          INVOKESPECIAL (java/util/ArrayList, <init>, (I)V)
         LABEL (L2)
-          SWAP
+          INVOKEVIRTUAL (android/os/Parcel, readInt, ()I)
+          ISTORE (2)
+          NEW
+          DUP
+          ILOAD (2)
+          INVOKESPECIAL (java/util/ArrayList, <init>, (I)V)
+          ILOAD (2)
+        LABEL (L3)
           DUP_X1
-          IFEQ (L3)
+          IFEQ (L4)
           DUP
           ALOAD (1)
           INVOKEVIRTUAL (android/os/Parcel, readStrongBinder, ()Landroid/os/IBinder;)
@@ -35,16 +36,15 @@ public final class User$Creator : java/lang/Object, android/os/Parcelable$Creato
           SWAP
           LDC (-1)
           IADD
-          SWAP
-          GOTO (L2)
-        LABEL (L3)
+          GOTO (L3)
+        LABEL (L4)
           SWAP
           POP
           ALOAD (1)
           INVOKEVIRTUAL (android/os/Parcel, readStrongInterface, ()Landroid/os/IInterface;)
           INVOKESPECIAL (User, <init>, (Landroid/os/IBinder;[Landroid/os/IBinder;Ljava/util/List;Ljava/util/ArrayList;Landroid/os/IInterface;)V)
           ARETURN
-        LABEL (L4)
+        LABEL (L5)
     }
 
     public final java.lang.Object[] newArray(int p0)
